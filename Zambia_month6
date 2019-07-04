@@ -9,7 +9,7 @@ library(rmarkdown)
 
 
 
-zambia_mo6<-read.csv("CUBEContraceptiveUse-Mo6_DATA_2019-06-21_1021.csv")
+zambia_mo6<-read.csv("cube_mo6_rc06")
 
 #internal consistency checks
 entry_errors <- 
