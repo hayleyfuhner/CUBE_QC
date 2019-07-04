@@ -1,0 +1,65 @@
+#CUBE QC report: South Africa
+#Created by: Hayley Fühner
+#Created on: 2019-04-21
+
+install.packages("tidyverse")
+install.packages("rmarkdown")
+library(tidyverse)
+library(rmarkdown)
+
+
+
+zambia_mo6<-read.csv("CUBEContraceptiveUse-Mo6_DATA_2019-06-21_1021.csv")
+
+#internal consistency checks
+entry_errors <- 
+  zambia_mo6 %>% 
+  group_by (pid) %>% 
+    mutate (
+      ptid_error  = (pid!=participant_id_number),
+      ex_mo1      = ((contraception_at_exit==1 & month_injectable3___1==1) 
+                     | (contraception_at_exit==2 & copper_iud___1==1)
+                     | (contraception_at_exit==3 & rod_implant_jadelle___1==1)),
+      discont_blank  = ((contraception_at_exit==1 & 
+                       (  month_injectable3___1==0 | (month_injectable3___2==0
+                        | month_injectable3___3==0 | month_injectable3___4==0 
+                        | month_injectable3___5==0 | month_injectable3___6==0))
+                       & method_discontinued==1)) #returns TRUE if no issue found
+                    | ((contraception_at_exit==4 &
+                         (  month_injectable2___1==0 | month_injectable2___2==0 
+                          | month_injectable2___3==0 | month_injectable2___4==0
+                          | month_injectable2___5==0 | month_injectable2___6==0))
+                       & method_discontinued==2)
+                    | ((contraception_at_exit==3 &
+                      (     rod_implant_jadelle___1==0 | rod_implant_jadelle___2==0
+                          | rod_implant_jadelle___3==0 | rod_implant_jadelle___4==0
+                          | rod_implant_jadelle___5==0 | rod_implant_jadelle___6==0))
+                       & method_discontinued!=3)
+                    | ((contraception_at_exit==3 &
+                       (  rod_implant_implanon___1==0 | rod_implant_implanon___2==0
+                        | rod_implant_implanon___3==0 | rod_implant_implanon___4==0
+                        | rod_implant_implanon___5==0 | rod_implant_implanon___6==0))
+                       & method_discontinued==4)
+                    | ((contraception_at_exit==2 &
+                         (   copper_iud___1==0 | copper_iud___2==0
+                           | copper_iud___3==0 | copper_iud___4==0
+                           | copper_iud___5==0 | copper_iud___6==0))
+                       & method_discontinued==5)
+                    | ((contraception_at_exit==2 &
+                         (   hormonal_iud___1==0 | hormonal_iud___2==0
+                           | hormonal_iud___3==0 | hormonal_iud___4==0
+                           | hormonal_iud___5==0 | hormonal_iud___6==0))
+                    & method_discontinued==6), 
+      mo6_survey = (which_interview!=1),
+      baby_time  = (((how_long_plan_use_curr==4 & how_long_wait <5.1) | another_child==0)
+                     | ((how_long_plan_use_curr==3 & how_long_wait <3) | another_child==0)
+                     | ((how_long_plan_use_curr==2 & how_long_wait <2) | another_child==0)
+                     | ((how_long_plan_use_curr==1 & how_long_wait <1) | another_child==0)),
+      no_baby    = (how_long_plan_use_curr==7 & (another_child!=0 | another_child!=88)),
+      cal_other  = ((other___1==1) | (other___2==1) | (
+        other___3==1) | (other___4==1) | (other___5==1) | (other___6==1) | (other___7==1) | (other___8==1)),
+      screening  = ((completed_echo_trial_exit==4) | (access_to_phone==0) | (informed_consent==0)) #more needed for eligability screening
+          ) %>%
+  select (pid, mo6_survey, ptid_error, screening, ex_mo1, cal_other, discont_blank, baby_time, no_baby) %>% 
+  filter (ptid_error==TRUE | mo6_survey==TRUE | screening==is.na(screening) | screening==TRUE | ex_mo1==is.na(ex_mo1) | ex_mo1==FALSE | cal_other==TRUE | discont_blank==is.na(discont_blank) | discont_blank==TRUE | baby_time==is.na(baby_time) | baby_time==TRUE | no_baby==is.na(no_baby) | no_baby==TRUE)
+  
