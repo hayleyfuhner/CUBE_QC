@@ -3,9 +3,7 @@
 #Created on: 2019-04-21
 
 install.packages("tidyverse")
-install.packages("rmarkdown")
 library(tidyverse)
-library(rmarkdown)
 
 
 
